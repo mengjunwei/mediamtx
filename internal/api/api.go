@@ -97,6 +97,7 @@ type API struct {
 	HLSServer      defs.APIHLSServer
 	WebRTCServer   defs.APIWebRTCServer
 	SRTServer      defs.APISRTServer
+	RTPServer      defs.APIRTPServer
 	Parent         apiParent
 
 	httpServer *httpp.Server
@@ -176,6 +177,12 @@ func (a *API) Initialize() error {
 		group.GET("/srtconns/list", a.onSRTConnsList)
 		group.GET("/srtconns/get/:id", a.onSRTConnsGet)
 		group.POST("/srtconns/kick/:id", a.onSRTConnsKick)
+	}
+
+	if !interfaceIsEmpty(a.RTPServer) {
+		group.POST("/rtpservers/open", a.onOpenRTPServer)
+		group.POST("/rtpservers/close/:port", a.onCloseRTPServer)
+		group.GET("/rtpservers/list", a.onListRTPServers)
 	}
 
 	group.GET("/recordings/list", a.onRecordingsList)

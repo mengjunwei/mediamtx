@@ -32,6 +32,7 @@ import (
 	"github.com/bluenviron/mediamtx/internal/rlimit"
 	"github.com/bluenviron/mediamtx/internal/servers/hls"
 	"github.com/bluenviron/mediamtx/internal/servers/rtmp"
+	"github.com/bluenviron/mediamtx/internal/servers/rtp"
 	"github.com/bluenviron/mediamtx/internal/servers/rtsp"
 	"github.com/bluenviron/mediamtx/internal/servers/srt"
 	"github.com/bluenviron/mediamtx/internal/servers/webrtc"
@@ -103,6 +104,7 @@ type Core struct {
 	hlsServer       *hls.Server
 	webRTCServer    *webrtc.Server
 	srtServer       *srt.Server
+	rtpManager      *rtp.Manager
 	api             *api.API
 	confWatcher     *confwatcher.ConfWatcher
 
@@ -642,6 +644,20 @@ func (p *Core) createResources(initial bool) error {
 		p.srtServer = i
 	}
 
+	if p.rtpManager == nil {
+		i := &rtp.Manager{
+			UDPReadBufferSize: p.conf.UDPReadBufferSize,
+			ReadTimeout:       p.conf.ReadTimeout,
+			PathManager:       p.pathManager,
+			Parent:            p,
+		}
+		err = i.Initialize()
+		if err != nil {
+			return err
+		}
+		p.rtpManager = i
+	}
+
 	if p.conf.API &&
 		p.api == nil {
 		i := &api.API{
@@ -665,6 +681,7 @@ func (p *Core) createResources(initial bool) error {
 			HLSServer:      p.hlsServer,
 			WebRTCServer:   p.webRTCServer,
 			SRTServer:      p.srtServer,
+			RTPServer:      p.rtpManager,
 			Parent:         p,
 		}
 		err = i.Initialize()
@@ -938,6 +955,11 @@ func (p *Core) closeResources(newConf *conf.Conf, calledByAPI bool) {
 		} else if !calledByAPI { // avoid a loop
 			p.api.ReloadConf(newConf)
 		}
+	}
+
+	if p.rtpManager != nil {
+		p.rtpManager.Close()
+		p.rtpManager = nil
 	}
 
 	if closeSRTServer && p.srtServer != nil {

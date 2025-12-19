@@ -146,7 +146,7 @@ authJWTInHTTPQuery: true
 # Global settings -> Control API
 
 # Enable controlling the server through the Control API.
-api: no
+api: yes
 # Address of the Control API listener.
 apiAddress: :9997
 # Enable TLS/HTTPS on the Control API server.
@@ -493,7 +493,7 @@ pathDefaults:
   # Default path settings -> Record
 
   # Record streams to disk.
-  record: no
+  record: yes
   # Path of recording segments.
   # Extension is added automatically.
   # Available variables are %path (path name), %Y %m %d (year, month, day),

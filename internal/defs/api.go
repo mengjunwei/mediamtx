@@ -50,6 +50,13 @@ type APIWebRTCServer interface {
 	APISessionsKick(uuid.UUID) error
 }
 
+// APIRTPServer contains methods used by the API and Metrics server.
+type APIRTPServer interface {
+	OpenServer(port int, streamPath string, sdp string, timeout time.Duration) (int, error)
+	CloseServer(port int) error
+	ListServers() ([]*APIRTPServerInfo, error)
+}
+
 // APIOK is returned on success.
 type APIOK struct {
 	Status string `json:"status"`
@@ -402,4 +409,11 @@ type APIRecordingList struct {
 	ItemCount int             `json:"itemCount"`
 	PageCount int             `json:"pageCount"`
 	Items     []*APIRecording `json:"items"`
+}
+
+// APIRTPServerInfo is a RTP server information.
+type APIRTPServerInfo struct {
+	Port       int       `json:"port"`
+	StreamPath string    `json:"streamPath"`
+	Created    time.Time `json:"created"`
 }
